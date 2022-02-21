@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Document</title>
+    <style>
+      h1 {
+        margin-bottom: 40px;
+        width: 100px;
+        margin: auto;
+      }
+      body {
+        background-color: #c7b39b;
+      }
+      #chessboard {
+        width: 400px;
+        height: 400px;
+        border: 3px solid black;
+        position: relative;
+      }
+      .chessB {
+        display: flex;
+        justify-content: center;
+      }
+      .cell {
+        width: 50px;
+        height: 50px;
+        float: left;
+        box-sizing: border-box;
+        position: relative;
+      }
+      .bg-black {
+        background: rgb(58, 54, 42);
+      }
+      .bg-wheat {
+        background: white;
+      }
+      .pawn {
+        width: 40px;
+        height: 40px;
+        border: 1px solid black;
+        border-radius: 50%;
+        background: rgb(221, 221, 218);
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+      .rPawn {
+        background: rgb(156, 29, 29);
+      }
+      .elect {
+        width: 35px;
+        height: 35px;
+        border: 5px solid lawngreen;
+      }
+
+      .active {
+        border: 3px solid lawngreen;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Corners</h1>
+    <div class="chessB">
+      <div id="chessboard"></div>
+    </div>
+    <script>
+      const div = document.querySelector('#chessboard');
+      let chessboard = [
+        [1, 1, 1, 0, 0, 0, 0, 0],
+        [1, 1, 1, 0, 0, 0, 0, 0],
+        [1, 1, 1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 2, 2, 2],
+        [0, 0, 0, 0, 0, 2, 2, 2],
+        [0, 0, 0, 0, 0, 2, 2, 2],
+      ];
+
+      let turn = 1;
+      showChessboard();
+      function showPawn(arr, x, y) {
+        let pawn = '';
+        if (arr == 1) {
+          pawn += `<div class ="pawn" data-position=${x}${y}></div>`;
+        } else if (arr == 2) {
+          pawn += `<div class ="pawn rPawn" data-position=${x}${y}></div>`;
+        }
+        return pawn;
+      }
+
+      function showChessboard() {
+        let out = '';
+        let m = 0;
+        for (let y = 0; y < chessboard.length; y++) {
+          let arr = chessboard[y];
+          for (let x = 0; x < arr.length; x++) {
+            if (m % 2 == 0) {
+              out += `<div class="cell bg-wheat" data-position=${x}${y}>
+        ${showPawn(arr[x], x, y)}</div>`;
+            } else {
+              out += `<div class="cell bg-black" data-position=${x}${y}>
+        ${showPawn(arr[x], x, y)}</div>`;
+            }
+            m++;
+          }
+          m++;
+        }
+        const chessboardRef = document.querySelector('#chessboard');
+        chessboardRef.innerHTML = out;
+
+        div.addEventListener('click', (e) => {
+          if (e.target.classList.contains('pawn')) {
+            showElect(e.target);
+          }
+        });
+        div.addEventListener('click', (e) => {
+          if (e.target.classList.contains('cell')) {
+            move(e.target);
+          }
+        });
+      }
+      const move = (divCell) => {
+        if (divCell.classList.contains('active')) {
+          const x = +divCell.dataset.position[0];
+          const y = +divCell.dataset.position[1];
+          let pawn = '';
+          pawn += `<div class ="pawn" data-position=${x}${y}></div>`;
+          divCell.innerHTML = pawn;
+          chessboard[y][x] = turn;
+          document.querySelectorAll('.pawn').forEach(function (element) {
+            if (element.classList.contains('elect')) {
+              const x = +element.dataset.position[0];
+              const y = +element.dataset.position[1];
+              chessboard[y][x] = 0;
+              showChessboard();
+            }
+          });
+          turn = turn == 1 ? 2 : 1;
+          divCell.classList.remove('active');
+          checkWinner();
+        }
+      };
+
+      const showElect = (divPawn) => {
+        document.querySelectorAll('.pawn').forEach((element) => {
+          element.classList.remove('elect');
+        });
+        document.querySelectorAll('.cell').forEach((element) => {
+          element.classList.remove('active');
+        });
+        divPawn.classList.add('elect');
+        const x = +divPawn.dataset.position[0];
+        const y = +divPawn.dataset.position[1];
+        if (chessboard[y][x] != turn) {
+          return;
+        }
+        let pawnUpp = document.querySelector(
+          `.pawn[ data-position="${x}${y - 1}"]`
+        );
+        let pawnLow = document.querySelector(
+          `.pawn[ data-position="${x}${y + 1}"]`
+        );
+        let pawnLef = document.querySelector(
+          `.pawn[ data-position="${x - 1}${y}"]`
+        );
+        let pawnRig = document.querySelector(
+          `.pawn[ data-position="${x + 1}${y}"]`
+        );
+
+        let cellUpp = document.querySelector(
+          `.cell[ data-position="${x}${y - 1}"]`
+        );
+        let cellLow = document.querySelector(
+          `.cell[ data-position="${x}${y + 1}"]`
+        );
+        let cellLef = document.querySelector(
+          `.cell[ data-position="${x - 1}${y}"]`
+        );
+        let cellRig = document.querySelector(
+          `.cell[ data-position="${x + 1}${y}"]`
+        );
+
+        if (!pawnUpp) {
+          cellUpp?.classList.add('active');
+        }
+        if (!pawnLow) {
+          cellLow?.classList.add('active');
+        }
+        if (!pawnLef) {
+          cellLef?.classList.add('active');
+        }
+        if (!pawnRig) {
+          cellRig?.classList.add('active');
+        }
+      };
+
+      const checkWinner = () => {
+        let stepWhite = 0;
+        let stepRed = 0;
+        for (let x = 0; x < 3; x++) {
+          for (let y = 0; y < 3; y++) {
+            if (chessboard[y][x] != 1 && chessboard[y][x] != 0) {
+              stepWhite++;
+            }
+          }
+        }
+        for (let x = 5; x < 8; x++) {
+          for (let y = 5; y < 8; y++) {
+            if (chessboard[y][x] != 2 && chessboard[y][x] != 0) {
+              stepRed++;
+            }
+          }
+        }
+        if (stepWhite == 9) {
+          alert('Congratulations to the reds on the victory');
+          return;
+        }
+        if (stepRed == 9) {
+          alert('Congratulations to the whites on the victory');
+          return;
+        }
+      };
+    </script>
+  </body>
+</html>
